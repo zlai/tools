@@ -12,4 +12,6 @@
 ### Markdown
   * [Markdown mode](https://jblevins.org/projects/markdown-mode/)
   * [Guide to Markdown Mode for Emacs](https://leanpub.com/markdown-mode/read)
+### Notes Taking
+  * [Deft for Emacs](https://jblevins.org/projects/deft/)
 ### Go
