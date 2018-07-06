@@ -11,6 +11,7 @@
                      atom-dark-theme
                      whitespace
                      edit-indirect
+                     deft
                      markdown-mode))
 (add-to-list 'package-archives
              '("melpa-stable" . "https://stable.melpa.org/packages/"))
@@ -80,30 +81,10 @@
 (require 'go-guru)
 
 
-;; VMware coding standard
-;; Do not use tab characters in C/C++/Perl code for indentation, use space.
-(setq-default indent-tabs-mode nil)
 ;; Lines should never be more than 89 characters in length, and in general should be 80 characters or less.
 (setq-default default-fill-column 80)
 ;; Indentation (tab stop) should be 3 spaces.
 (setq standard-indent 3)
-;; Instruct emacs how to layout source
-(c-add-style "vmware"
-     '((c-basic-offset . 3)
-      (c-comment-only-line-offset . 0)
-      (c-hanging-braces-alist . ((substatement-open before after)))
-      (c-offsets-alist . ((topmost-intro        . 0)
-                         (topmost-intro-cont   . 0)
-                         (substatement         . 3)
-                         (substatement-open    . 0)
-                         (statement-case-open  . 3)
-                         (statement-cont       . 3)
-                         (access-label         . -3)
-                         (inclass              . 3)
-                         (inline-open          . 3)
-                         (innamespace          . 0)
-                         ))))
-(add-hook 'c-mode-common-hook (lambda () (c-set-style "vmware")))
 
 ;; (setq line-number-display-limit 100000000)
 (setq ring-bell-function 'ignore)
