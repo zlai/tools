@@ -3,20 +3,26 @@
 ;; https://stackoverflow.com/questions/10092322/how-to-automatically-install-emacs-packages-by-specifying-a-list-of-package-name
 ;; Set up package repositories so M-x package-install works.
 (require 'package)
-(setq package-list '(go-autocomplete
-                     go-guru
+(setq package-list '(go-mode
+                     lsp-mode
+                     lsp-ui
+                     eglot
+                     exec-path-from-shell
+                     company
                      flyspell
                      xcscope
                      json-mode
                      atom-dark-theme
+                     yasnippet
                      whitespace
                      edit-indirect
                      deft
+                     tramp
                      markdown-mode))
 (add-to-list 'package-archives
-             '("melpa-stable" . "https://stable.melpa.org/packages/"))
+             '("melpa-stable" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/stable-melpa/"))
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
+             '("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/"))
 ;; activate all the packages (in particular autoloads)
 (package-initialize)
 ;; fetch the list of packages available
@@ -26,15 +32,17 @@
 (dolist (package package-list)
   (unless (package-installed-p package)
         (package-install package)))
+(eval-and-compile
+  (setq use-package-always-ensure t
+        use-package-expand-minimally t))
 
-;; https://johnsogg.github.io/emacs-golang
 ;; High level aesthetic stuff
 (tool-bar-mode -1)                  ; Disable the button bar atop screen
-(scroll-bar-mode -1)                ; Disable scroll bar
+;; (scroll-bar-mode -1)                ; Disable scroll bar
 (setq inhibit-startup-screen t)     ; Disable startup screen with graphics
 ;; (set-default-font "Monaco 12")      ; Set font and size
-(setq-default indent-tabs-mode nil) ; Use spaces instead of tabs
-(setq tab-width 2)                  ; Four spaces is a tab
+;; (setq-default indent-tabs-mode nil) ; Use spaces instead of tabs
+;; (setq tab-width 4)                  ; Four spaces is a tab
 (setq visible-bell nil)             ; Disable annoying visual bell graphic
 (setq ring-bell-function 'ignore)   ; Disable super annoying audio bell
 
@@ -42,49 +50,12 @@
 (setq mac-option-modifier 'super)
 (setq mac-command-modifier 'meta)
 
-(load-theme 'atom-dark t)       ; Color theme installed via melpa
-
-;; Snag the user's PATH and GOPATH
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-env "GOPATH"))
-
-;; Define function to call when go-mode loads
-(defun my-go-mode-hook ()
-  (add-hook 'before-save-hook 'gofmt-before-save) ; gofmt before every save
-  (setq gofmt-command "goimports")                ; gofmt uses invokes goimports
-  (if (not (string-match "go" compile-command))   ; set compile command default
-      (set (make-local-variable 'compile-command)
-           "go build -v && go test -v && go vet"))
-
-  ;; guru settings
-  (go-guru-hl-identifier-mode)                    ; highlight identifiers
-
-  ;; Key bindings specific to go-mode
-  (local-set-key (kbd "M-.") 'godef-jump)         ; Go to definition
-  (local-set-key (kbd "M-*") 'pop-tag-mark)       ; Return from whence you came
-  (local-set-key (kbd "M-p") 'compile)            ; Invoke compiler
-  (local-set-key (kbd "M-P") 'recompile)          ; Redo most recent compile cmd
-  (local-set-key (kbd "M-]") 'next-error)         ; Go to next error (or msg)
-  (local-set-key (kbd "M-[") 'previous-error)     ; Go to previous error or msg
-
-  ;; Misc go stuff
-  (auto-complete-mode 1))                         ; Enable auto-complete mode
-;; Connect go-mode-hook with the function we just defined
-(add-hook 'go-mode-hook 'my-go-mode-hook)
-
-;; Ensure the go specific autocomplete is active in go-mode.
-(with-eval-after-load 'go-mode
-   (require 'go-autocomplete))
-
-;; If the go-guru.el file is in the load path, this will load it.
-(require 'go-guru)
-
+;; (load-theme 'atom-dark t)       ; Color theme installed via melpa
 
 ;; Lines should never be more than 89 characters in length, and in general should be 80 characters or less.
-(setq-default default-fill-column 80)
+;; (setq-default default-fill-column 80)
 ;; Indentation (tab stop) should be 3 spaces.
-(setq standard-indent 3)
+(setq standard-indent 4)
 
 ;; (setq line-number-display-limit 100000000)
 (setq ring-bell-function 'ignore)
@@ -122,7 +93,6 @@
 (require 'flyspell)
 
 ;; flyspell minor mode
-
 (dolist (hook '(text-mode-hook))
   (add-hook hook (lambda () (flyspell-mode 1))))
 (dolist (hook '(change-log-mode-hook log-edit-mode-hook))
@@ -155,20 +125,122 @@
   whitespace-style       '(face lines-tail))
 (add-hook 'prog-mode-hook #'whitespace-mode)
 
+;; (setq-default c-default-style "c")
 (add-hook 'c-mode-common-hook
           (lambda ()
             (flyspell-prog-mode)))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(dtrt-indent-global-mode t)
  '(package-selected-packages
-   (quote
-    (edit-indirect atom-dark-theme xcscope json-mode go-guru go-autocomplete))))
+   '(counsel dtrt-indent lua-mode yaml-mode dockerfile-mode go-tag gotest flycheck lsp-mode go-mode cmake-mode meson-mode unicad protobuf-mode clang-format magit tramp edit-indirect atom-dark-theme xcscope json-mode go-guru go-autocomplete)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+(set-face-attribute 'default nil :height 160)
+
+(require 'tramp)
+(setq tramp-default-method "ssh")
+
+
+;; https://github.com/kljohann/clang-format.el/issues/5
+;; (defun my-clang-format-region ()
+;;   (interactive)
+;;   (let ((start (if (use-region-p) (region-beginning) (point)))
+;;         (end (if (use-region-p) (region-end) (point)))
+;;         (assumed-filename (if (file-remote-p buffer-file-name)
+;;                                (concat (getenv "HOME") "/" (file-name-nondirectory buffer-file-name))
+;;                              buffer-file-name)))
+;;     (clang-format-region start end clang-format-style assumed-filename)))
+(global-set-key (kbd "C-M-,") 'clang-format-region)
+
+(global-display-line-numbers-mode)
+
+;;
+;; use use-package
+;;
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(setq gofmt-command "goimports")
+(add-hook 'before-save-hook #'gofmt-before-save)
+
+(when (eq system-type 'darwin)
+  (setq exec-path-from-shell-arguments '("-l"))
+  (add-hook 'after-init-hook #'exec-path-from-shell-initialize)
+  (with-eval-after-load "go-mode"
+    (with-eval-after-load "exec-path-from-shell"
+      (exec-path-from-shell-copy-envs '("GOPATH" "GO111MODULE" "GOPROXY")))))
+
+(add-hook 'prog-mode-hook #'flymake-mode)
+(with-eval-after-load "flymake"
+  (define-key flymake-mode-map (kbd "C-c C-b") 'flymake-show-diagnostics-buffer)
+  (define-key flymake-mode-map (kbd "M-n") 'flymake-goto-next-error)
+  (define-key flymake-mode-map (kbd "M-p") 'flymake-goto-prev-error))
+
+(setq gofmt-show-errors nil)
+
+(add-hook 'prog-mode-hook #'company-mode)
+(setq company-tooltip-limit 10
+      company-tooltip-align-annotations t
+      company-tooltip-width-grow-only t
+      company-abort-manual-when-too-short t
+      company-require-match nil
+      company-backends '(company-capf)
+      company-tooltip-margin 0)
+(with-eval-after-load "company"
+  (define-key company-active-map [tab] 'company-complete-common-or-cycle)
+  (define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
+  (define-key company-active-map (kbd "C-p") #'company-select-previous)
+  (define-key company-active-map (kbd "C-n") #'company-select-next))
+
+
+(add-hook 'go-mode-hook #'eglot-ensure)
+(setq eglot-ignored-server-capabilites '(:documentHighlightProvider)
+      read-process-output-max (* 1024 1024))
+
+(setq eldoc-idle-dealy 2)
+
+(add-hook 'prog-mode-hook #'yas-minor-mode)
+
+(setq-default eglot-workspace-configuration
+              '((gopls
+                 (usePlaceholders . t))))
+
+(defun my-c++-mode-hook ()
+  (setq c-basic-offset 4)
+  (c-set-offset 'substatement-open 0)
+  (c-set-offset 'innamespace [0]))
+(add-hook 'c++-mode-hook 'my-c++-mode-hook)
+
+(ivy-mode)
+(setq ivy-use-virtual-buffers t)
+(setq enable-recursive-minibuffers t)
+;; enable this if you want `swiper' to use it
+;; (setq search-default-mode #'char-fold-to-regexp)
+(global-set-key "\C-s" 'swiper)
+(global-set-key (kbd "C-c C-r") 'ivy-resume)
+(global-set-key (kbd "<f6>") 'ivy-resume)
+(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+(global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
+(global-set-key (kbd "<f1> l") 'counsel-find-library)
+(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+(global-set-key (kbd "C-c g") 'counsel-git)
+(global-set-key (kbd "C-c j") 'counsel-git-grep)
+(global-set-key (kbd "C-c k") 'counsel-ag)
+(global-set-key (kbd "C-x l") 'counsel-locate)
+(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+;;(define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
